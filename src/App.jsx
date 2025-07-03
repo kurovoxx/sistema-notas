@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Users, BookOpen, GraduationCap, FileDown, Save, Plus } from 'lucide-react';
+import { supabase } from './supabaseClient';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import { generateStudentReport } from './pdfGenerator'; // ajusta la ruta según tu estructura
+
 
 const GradeManagementSystem = () => {
   // Estados principales
@@ -9,7 +14,7 @@ const GradeManagementSystem = () => {
   const [grades, setGrades] = useState([]);
 
   // Estados para formularios
-  const [newStudent, setNewStudent] = useState({ name: '', course: '', year: '' });
+  const [newStudent, setNewStudent] = useState({ name: '', course: '', year: '', semester: '' });
   const [newCourse, setNewCourse] = useState('');
   
   // Estados para ingreso de notas
@@ -45,58 +50,69 @@ const GradeManagementSystem = () => {
 
   // Simulación de base de datos (en producción sería Supabase)
   useEffect(() => {
-    // Cargar datos guardados del localStorage como simulación
-    const savedStudents = localStorage.getItem('students');
-    const savedCourses = localStorage.getItem('courses');
-    const savedGrades = localStorage.getItem('grades');
-    
-    if (savedStudents) setStudents(JSON.parse(savedStudents));
-    if (savedCourses) setCourses(JSON.parse(savedCourses));
-    if (savedGrades) setGrades(JSON.parse(savedGrades));
-  }, []);
+  const fetchData = async () => {
+    const { data: studentsData } = await supabase.from('students').select('*');
+    const { data: coursesData } = await supabase.from('courses').select('*');
+    const { data: gradesData } = await supabase.from('grades').select('*');
 
-  // Función para guardar en "base de datos"
-  const saveToDB = (key, data) => {
-    localStorage.setItem(key, JSON.stringify(data));
+    if (studentsData) setStudents(studentsData);
+    if (coursesData) setCourses(coursesData.map(c => c.name)); // Solo nombre
+    if (gradesData) setGrades(gradesData);
   };
+
+  fetchData();
+}, []);
+
+
 
   // Agregar estudiante
-  const addStudent = () => {
-    if (!newStudent.name || !newStudent.course || !newStudent.year) {
-      alert('Por favor completa todos los campos');
-      return;
-    }
-    
-    const student = {
-      id: Date.now(),
-      ...newStudent
-    };
-    
-    const updatedStudents = [...students, student];
-    setStudents(updatedStudents);
-    saveToDB('students', updatedStudents);
-    setNewStudent({ name: '', course: '', year: '' });
-    alert('Estudiante agregado exitosamente');
-  };
+  const addStudent = async () => {
+  if (!newStudent.name || !newStudent.course || !newStudent.year || !newStudent.semester) {
+  alert('Por favor completa todos los campos');
+  return;
+}
+
+
+  const { data, error } = await supabase.from('students').insert([newStudent]).select();
+
+if (error || !data || !Array.isArray(data)) {
+  alert('Error al agregar estudiante');
+  console.error(error || 'Datos inválidos');
+  return;
+}
+
+setStudents(prev => [...prev, ...data]);
+setNewStudent({ name: '', course: '', year: '' });
+alert('Estudiante agregado exitosamente');
+
+};
+
 
   // Agregar curso
-  const addCourse = () => {
-    if (!newCourse.trim()) {
-      alert('Por favor ingresa el nombre del curso');
-      return;
-    }
-    
-    if (courses.includes(newCourse)) {
-      alert('Este curso ya existe');
-      return;
-    }
-    
-    const updatedCourses = [...courses, newCourse];
-    setCourses(updatedCourses);
-    saveToDB('courses', updatedCourses);
-    setNewCourse('');
-    alert('Curso agregado exitosamente');
-  };
+  // Agregar curso
+const addCourse = async () => {
+  if (!newCourse.trim()) {
+    alert('Por favor ingresa el nombre del curso');
+    return;
+  }
+
+  if (courses.includes(newCourse)) {
+    alert('Este curso ya existe');
+    return;
+  }
+
+  const { data, error } = await supabase.from('courses').insert([{ name: newCourse }]);
+  if (error) {
+    alert('Error al agregar curso');
+    console.error(error);
+    return;
+  }
+
+  setCourses(prev => [...prev, newCourse]);
+  setNewCourse('');
+  alert('Curso agregado exitosamente');
+};
+
 
   // Filtrar estudiantes por curso
   const getStudentsByCourse = () => {
@@ -139,89 +155,153 @@ const GradeManagementSystem = () => {
 
   // Cargar notas existentes cuando se selecciona un estudiante
   useEffect(() => {
-    if (selectedStudent && selectedSemester && selectedYear) {
-      const existingGrade = grades.find(g => 
-        g.studentId === parseInt(selectedStudent) && 
-        g.semester === selectedSemester && 
-        g.year === selectedYear
-      );
-      
-      if (existingGrade) {
-        setCurrentGrades(existingGrade.grades);
-        setObservations(existingGrade.observations || '');
-      } else {
-        // Limpiar formulario
-        setCurrentGrades(subjects.reduce((acc, subject) => {
-          acc[subject] = ['', '', '', '', '', '', ''];
-          return acc;
-        }, {}));
-        setObservations('');
-      }
-    }
-  }, [selectedStudent, selectedSemester, selectedYear, grades]);
-
-  // Guardar notas
-  const saveGrades = () => {
-    if (!selectedStudent || !selectedSemester || !selectedYear) {
-      alert('Por favor selecciona estudiante, semestre y año');
-      return;
-    }
-
-    const gradeRecord = {
-      id: Date.now(),
-      studentId: parseInt(selectedStudent),
-      semester: selectedSemester,
-      year: selectedYear,
-      grades: currentGrades,
-      observations,
-      createdAt: new Date().toISOString()
-    };
-
-    // Verificar si ya existe un registro para actualizar
-    const existingIndex = grades.findIndex(g => 
-      g.studentId === parseInt(selectedStudent) && 
-      g.semester === selectedSemester && 
-      g.year === selectedYear
+  if (selectedStudent && selectedSemester && selectedYear) {
+    const existingGrade = grades.find(g =>
+      g.student_id === parseInt(selectedStudent) &&
+      g.semester === parseInt(selectedSemester) &&
+      g.year === parseInt(selectedYear)
     );
 
-    let updatedGrades;
-    if (existingIndex !== -1) {
-      updatedGrades = grades.map((g, i) => i === existingIndex ? { ...gradeRecord, id: g.id } : g);
-      alert('Notas actualizadas exitosamente');
+    if (existingGrade) {
+      setCurrentGrades(existingGrade.grades);
+      setObservations(existingGrade.observations || '');
     } else {
-      updatedGrades = [...grades, gradeRecord];
-      alert('Notas guardadas exitosamente');
+      // Limpiar si no se encuentra
+      setCurrentGrades(subjects.reduce((acc, subject) => {
+        acc[subject] = ['', '', '', '', '', '', ''];
+        return acc;
+      }, {}));
+      setObservations('');
     }
+  }
+}, [selectedStudent, selectedSemester, selectedYear, grades]);
 
-    setGrades(updatedGrades);
-    saveToDB('grades', updatedGrades);
+
+  // Guardar notas
+  const saveGrades = async () => {
+  if (!selectedStudent || !selectedSemester || !selectedYear) {
+    alert('Por favor selecciona estudiante, semestre y año');
+    return;
+  }
+
+  const gradeRecord = {
+    student_id: parseInt(selectedStudent),
+    semester: parseInt(selectedSemester),
+    year: parseInt(selectedYear),
+    grades: currentGrades,
+    observations
   };
 
-  // Generar reportes (simulado)
-  const generateReports = () => {
-    if (!reportFilters.course || !reportFilters.semester || !reportFilters.year) {
-      alert('Por favor selecciona curso, semestre y año');
+  // Verificar si ya existe
+  const { data: existing, error: fetchError } = await supabase
+    .from('grades')
+    .select('id')
+    .eq('student_id', gradeRecord.student_id)
+    .eq('semester', gradeRecord.semester)
+    .eq('year', gradeRecord.year)
+    .single();
+
+  if (existing) {
+    // UPDATE
+    const { error: updateError } = await supabase
+      .from('grades')
+      .update(gradeRecord)
+      .eq('id', existing.id);
+
+    if (updateError) {
+      alert('Error al actualizar notas');
+      console.error(updateError);
       return;
     }
 
-    const courseStudents = students.filter(s => s.course === reportFilters.course);
-    const reportsData = courseStudents.map(student => {
-      const studentGrades = grades.find(g => 
-        g.studentId === student.id && 
-        g.semester === reportFilters.semester && 
-        g.year === reportFilters.year
-      );
-      
-      return {
-        student: student.name,
-        grades: studentGrades ? studentGrades.grades : null,
-        observations: studentGrades ? studentGrades.observations : ''
-      };
+    alert('Notas actualizadas exitosamente');
+  } else {
+    // INSERT
+    const { error: insertError } = await supabase.from('grades').insert([gradeRecord]);
+    if (insertError) {
+      alert('Error al guardar notas');
+      console.error(insertError);
+      return;
+    }
+
+    alert('Notas guardadas exitosamente');
+  }
+
+  // Recargar datos
+  const { data: updatedGrades } = await supabase.from('grades').select('*');
+  setGrades(updatedGrades);
+};
+
+  const calcularPromedio = (notas) => {
+  const nums = notas
+    .map(n => parseFloat(n))
+    .filter(n => !isNaN(n));
+  if (nums.length === 0) return '';
+  return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+};
+
+
+  // Generar reportes 
+  const generateReports = async (students, grades, reportFilters) => {
+  if (!reportFilters?.course || !reportFilters?.semester || !reportFilters?.year) {
+    alert('Por favor selecciona curso, semestre y año');
+    return;
+  }
+
+  const zip = new JSZip();
+  const filteredStudents = students.filter(
+    s =>
+      s.course === reportFilters.course &&
+      parseInt(s.year) === parseInt(reportFilters.year) &&
+      parseInt(s.semester) === parseInt(reportFilters.semester)
+  );
+
+  for (const student of filteredStudents) {
+    const record = grades.find(
+      g =>
+        g.student_id === student.id &&
+        parseInt(g.semester) === parseInt(reportFilters.semester) &&
+        parseInt(g.year) === parseInt(reportFilters.year)
+    );
+
+    if (!record) continue;
+
+    const materiasData = Object.entries(record.grades).map(([subject, notas]) => {
+      const promedio =
+        notas.filter(n => /^\d{2}$/.test(n)).reduce((acc, val) => acc + parseInt(val), 0) /
+        (notas.filter(n => /^\d{2}$/.test(n)).length || 1);
+      return [subject, ...notas, promedio.toFixed(1)];
     });
 
-    console.log('Datos para PDFs:', reportsData);
-    alert(`Generando ${reportsData.length} reportes para ${reportFilters.course} - ${reportFilters.semester}° Semestre ${reportFilters.year}`);
-  };
+    const promedio_final = (
+      materiasData.reduce((acc, m) => acc + parseFloat(m[m.length - 1]), 0) /
+      materiasData.length
+    ).toFixed(1);
+
+    const semestreTexto =
+      student.semester === 1 || student.semester === '1' ? 'PRIMER' : 'SEGUNDO';
+
+    const pdfBytes = await generateStudentReport({
+      nombre_alumno: student.name,
+      curso: student.course,
+      año: student.year,
+      informe_periodo: semestreTexto,
+      materias_data: materiasData,
+      observaciones: record.observations || '',
+      promedio_final
+    });
+
+    const nombreLimpio = student.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+    zip.file(`${nombreLimpio}.pdf`, pdfBytes);
+  }
+
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  saveAs(zipBlob, 'informes.zip');
+};
+
+
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -434,6 +514,22 @@ const GradeManagementSystem = () => {
                     ))}
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Semestre
+                  </label>
+                  <select
+                    value={newStudent.semester}
+                    onChange={(e) => setNewStudent({ ...newStudent, semester: e.target.value })}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Seleccionar semestre</option>
+                    <option value="1">Primer Semestre</option>
+                    <option value="2">Segundo Semestre</option>
+                  </select>
+                </div>
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
