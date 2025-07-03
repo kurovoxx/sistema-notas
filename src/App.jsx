@@ -4,6 +4,8 @@ import { supabase } from './supabaseClient';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { generateStudentReport } from './pdfGenerator'; // ajusta la ruta según tu estructura
+import './modern-style.css';
+
 
 
 const GradeManagementSystem = () => {
@@ -321,7 +323,7 @@ const generateReports = async () => {
         });
 
         const sumaPromedios = promediosFinales.reduce((acc, val) => acc + val, 0);
-        const promedio_final = Math.round(sumaPromedios / subjects.length);
+        const promedio_final = Math.round(sumaPromedios / (subjects.length - 1));
 
         // Validar y convertir semestre
         let semestreTexto = 'PRIMER';

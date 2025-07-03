@@ -1,0 +1,145 @@
+/* Paleta de colores personalizada */
+:root {
+  --verde-lse: #43e06d;
+  --amarillo-lse: #f7df07;
+  --naranja-lse: #b85a1c;
+  --gris-fondo: #f9fafb;
+  --gris-borde: #d1d5db;
+  --gris-texto: #374151;
+  --azul-seleccion: #2563eb;
+}
+
+/* Fuente y estructura */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--gris-fondo);
+  color: var(--gris-texto);
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  color: var(--gris-texto);
+}
+
+/* Header */
+header {
+  background-color: white;
+  border-bottom: 1px solid var(--gris-borde);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+header h1 {
+  font-size: 1.75rem;
+}
+
+/* Tabs */
+nav button {
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease-in-out;
+}
+
+nav button:hover {
+  border-color: var(--verde-lse);
+  color: var(--verde-lse);
+}
+
+nav button.border-blue-500 {
+  color: var(--verde-lse);
+  border-color: var(--verde-lse);
+}
+
+/* Tarjetas y contenedores */
+.bg-white {
+  background-color: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
+}
+
+/* Inputs y selects */
+input, select, textarea {
+  border: 1px solid var(--gris-borde);
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-size: 0.95rem;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--verde-lse);
+  box-shadow: 0 0 0 2px rgba(67, 224, 109, 0.3);
+  outline: none;
+}
+
+/* Botones personalizados */
+button {
+  margin-top: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+}
+
+.bg-blue-600 {
+  background-color: var(--verde-lse);
+  color: white;
+}
+
+.bg-blue-600:hover {
+  background-color: #36b45e;
+}
+
+.bg-green-600 {
+  background-color: var(--amarillo-lse);
+  color: black;
+}
+
+.bg-green-600:hover {
+  background-color: #e0c907;
+}
+
+.bg-purple-600 {
+  background-color: var(--naranja-lse);
+  color: white;
+}
+
+.bg-purple-600:hover {
+  background-color: #984717;
+}
+
+/* Cajas de advertencia/info */
+.bg-blue-50 {
+  background-color: #ecfdf5;
+  border-left: 4px solid var(--verde-lse);
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.text-blue-800 {
+  color: #065f46;
+}
+
+/* Celdas de nota */
+input[type="text"].w-12 {
+  width: 6rem;
+  height: 1.5rem;
+  text-align: center;
+  border-radius: 6px;
+  border: 1px solid var(--gris-borde);
+}
+
+/* Scroll personalizado */
+.max-h-40 {
+  max-height: 10rem;
+  overflow-y: auto;
+}
+
+/* Transiciones suaves */
+select, input, textarea, button {
+  transition: all 0.2s ease-in-out;
+}
