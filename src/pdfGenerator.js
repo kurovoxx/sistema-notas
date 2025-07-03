@@ -1,101 +1,100 @@
-import { jsPDF } from 'jspdf';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
-// Convierte una imagen (url o base64) a base64 para jsPDF si quieres logo
-async function getBase64ImageFromUrl(url) {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
+export async function generateStudentReport(pdfData) {
+  const {
+    nombre_alumno,
+    curso,
+    año,
+    informe_periodo,
+    materias_data,
+    observaciones,
+    promedio_final
+  } = pdfData;
 
-export async function generateStudentReport({
-  nombreAlumno,
-  curso,
-  año,
-  semestre,
-  materiasData,
-  observaciones,
-  promedioFinal,
-  logoUrl // opcional: URL o base64 del logo
-}) {
-  const doc = new jsPDF();
+  // Crear documento PDF
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4 en puntos
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Logo opcional
-  if (logoUrl) {
-    try {
-      const imgData = await getBase64ImageFromUrl(logoUrl);
-      doc.addImage(imgData, 'JPEG', 160, 10, 30, 30);
-    } catch (e) {
-      console.error('No se pudo cargar logo:', e);
-    }
-  }
+  const { width, height } = page.getSize();
+  const margin = 40;
+  let y = height - margin;
 
-  doc.setFontSize(12);
-  doc.text('Liceo Agrícola San Sebastián', 20, 20);
-  doc.text('Comuna de Perquenco', 20, 27);
-  doc.text('Fono: 4524537002', 20, 34);
+  const drawText = (text, x, y, fontSize = 12, bold = false, options = {}) => {
+    page.drawText(text, {
+      x,
+      y,
+      size: fontSize,
+      font: bold ? boldFont : font,
+      color: rgb(0, 0, 0),
+      ...options,
+    });
+  };
 
-  doc.setFontSize(14);
-  doc.setFont(undefined, 'bold');
-  doc.text(`INFORME DE NOTAS ${semestre.toUpperCase()} SEMESTRE`, 105, 50, { align: 'center' });
+  // Encabezado
+  drawText('Liceo Agrícola San Sebastián', margin, y, 14, true);
+  y -= 18;
+  drawText('Comuna de Perquenco', margin, y);
+  y -= 14;
+  drawText('Fono: 4524537002', margin, y);
+  y -= 30;
 
-  doc.setFontSize(12);
-  doc.setFont(undefined, 'normal');
-  doc.text(`ALUMNO/A: ${nombreAlumno}`, 20, 60);
-  doc.text(`PROFESORA JEFE: JOAN ESPINOZA TORRES`, 20, 68);
-  doc.text(`CURSO: ${curso}`, 20, 76);
-  doc.text(`AÑO: ${año}`, 100, 76);
+  // Título
+  drawText(`INFORME DE NOTAS ${informe_periodo.toUpperCase()} SEMESTRE`, margin, y, 14, true);
+  y -= 25;
+
+  // Datos del estudiante
+  drawText(`ALUMNO/A: ${nombre_alumno}`, margin, y);
+  y -= 16;
+  drawText(`PROFESORA JEFE: JOAN ESPINOZA TORRES`, margin, y);
+  y -= 16;
+  drawText(`CURSO: ${curso}   AÑO: ${año}`, margin, y);
+  y -= 25;
 
   // Tabla de notas
-  const startY = 90;
-  const rowHeight = 8;
-  const colWidths = [40, 20, 20, 20, 20, 20, 20, 20, 25];
   const headers = ['ASIGNATURAS', 'N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'PROMEDIO'];
+  const colWidths = [100, 40, 40, 40, 40, 40, 40, 40, 60];
+  const startX = margin;
+  let colX = startX;
+  const rowHeight = 20;
 
-  doc.setFont(undefined, 'bold');
-  headers.forEach((h, i) =>
-    doc.text(h, colWidths.slice(0, i).reduce((a, b) => a + b, 20) + 2, startY)
-  );
+  // Dibujar encabezados
+  headers.forEach((header, i) => {
+    drawText(header, colX + 2, y, 10, true);
+    colX += colWidths[i];
+  });
+  y -= rowHeight;
 
-  doc.setFont(undefined, 'normal');
-  materiasData.forEach((fila, rowIndex) => {
-    fila.forEach((celda, colIndex) => {
-      doc.text(
-        String(celda),
-        colWidths.slice(0, colIndex).reduce((a, b) => a + b, 20) + 2,
-        startY + rowHeight * (rowIndex + 1)
-      );
+  // Dibujar filas
+  materias_data.forEach(fila => {
+    colX = startX;
+    fila.forEach((item, i) => {
+      drawText(item || '', colX + 2, y, 10);
+      colX += colWidths[i];
     });
+    y -= rowHeight;
   });
 
-  // Promedio final
-  doc.setFont(undefined, 'bold');
-  const pfY = startY + rowHeight * (materiasData.length + 1);
-  doc.text('PROMEDIO FINAL', 20 + 2, pfY);
-  doc.text(
-    String(promedioFinal),
-    colWidths.slice(0, 8).reduce((a, b) => a + b, 20) + 2,
-    pfY
-  );
+  // Fila de promedio final
+  colX = startX;
+  drawText('PROMEDIO FINAL', colX + 2, y, 10, true);
+  colX += colWidths[0] + colWidths.slice(1, 8).reduce((a, b) => a + b, 0);
+  drawText(promedio_final, colX + 2, y, 10, true);
+  y -= 30;
 
   // Observaciones
-  doc.setFont(undefined, 'bold');
-  const obsStart = pfY + 15;
-  doc.text('Observaciones:', 20, obsStart);
-
-  doc.setFont(undefined, 'normal');
-  const splitObs = doc.splitTextToSize(observaciones || 'Sin observaciones', 170);
-  doc.text(splitObs, 20, obsStart + 7);
+  drawText('Observaciones:', margin, y, 12, true);
+  y -= 16;
+  drawText(observaciones || 'Sin observaciones', margin, y, 10);
+  y -= 40;
 
   // Firma
-  const bottomY = 280;
-  doc.setFontSize(12);
-  doc.text('Álvaro Guzmán Ibáñez', 105, bottomY, { align: 'center' });
-  doc.text('Director', 105, bottomY + 6, { align: 'center' });
+  drawText('Álvaro Guzmán Ibáñez', margin, y, 12, true);
+  y -= 16;
+  drawText('Director', margin, y, 12);
+  y -= 10;
 
-  return doc.output('blob');
+  const pdfBytes = await pdfDoc.save();
+  return pdfBytes;
 }

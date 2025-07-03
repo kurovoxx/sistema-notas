@@ -233,70 +233,157 @@ const addCourse = async () => {
 };
 
   const calcularPromedio = (notas) => {
+  if (!Array.isArray(notas)) return 0;
+  
   const nums = notas
+    .filter(n => n !== null && n !== undefined && n !== '')
     .map(n => parseFloat(n))
     .filter(n => !isNaN(n));
-  if (nums.length === 0) return '';
+  
+  if (nums.length === 0) return 0;
   return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
 };
 
 
-  // Generar reportes 
-  const generateReports = async (students, grades, reportFilters) => {
+  // Función generateReports mejorada
+const generateReports = async () => {
+  console.log('Ejecutando generateReports...');
+  console.log('Filtros actuales:', reportFilters);
+  console.log('Estudiantes:', students.length, 'Notas:', grades.length);
+
   if (!reportFilters?.course || !reportFilters?.semester || !reportFilters?.year) {
     alert('Por favor selecciona curso, semestre y año');
     return;
   }
 
-  const zip = new JSZip();
-  const filteredStudents = students.filter(
-    s =>
-      s.course === reportFilters.course &&
-      parseInt(s.year) === parseInt(reportFilters.year) &&
-      parseInt(s.semester) === parseInt(reportFilters.semester)
-  );
-
-  for (const student of filteredStudents) {
-    const record = grades.find(
-      g =>
-        g.student_id === student.id &&
-        parseInt(g.semester) === parseInt(reportFilters.semester) &&
-        parseInt(g.year) === parseInt(reportFilters.year)
-    );
-
-    if (!record) continue;
-
-    const materiasData = Object.entries(record.grades).map(([subject, notas]) => {
-      const promedio =
-        notas.filter(n => /^\d{2}$/.test(n)).reduce((acc, val) => acc + parseInt(val), 0) /
-        (notas.filter(n => /^\d{2}$/.test(n)).length || 1);
-      return [subject, ...notas, promedio.toFixed(1)];
-    });
-
-    const promedio_final = (
-      materiasData.reduce((acc, m) => acc + parseFloat(m[m.length - 1]), 0) /
-      materiasData.length
-    ).toFixed(1);
-
-    const semestreTexto =
-      student.semester === 1 || student.semester === '1' ? 'PRIMER' : 'SEGUNDO';
-
-    const pdfBytes = await generateStudentReport({
-      nombre_alumno: student.name,
-      curso: student.course,
-      año: student.year,
-      informe_periodo: semestreTexto,
-      materias_data: materiasData,
-      observaciones: record.observations || '',
-      promedio_final
-    });
-
-    const nombreLimpio = student.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
-    zip.file(`${nombreLimpio}.pdf`, pdfBytes);
+  if (typeof JSZip === 'undefined' || typeof saveAs === 'undefined') {
+    alert('Error: Las librerías necesarias no están disponibles. Contacta al administrador.');
+    return;
   }
 
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
-  saveAs(zipBlob, 'informes.zip');
+  if (typeof generateStudentReport !== 'function') {
+    alert('Error: La función de generación de PDF no está disponible');
+    return;
+  }
+
+  try {
+    const zip = new JSZip();
+
+    const filteredStudents = students.filter(s => {
+      const courseMatch = s.course === reportFilters.course;
+      const yearMatch = String(s.year) === String(reportFilters.year);
+      const semesterMatch = String(s.semester) === String(reportFilters.semester);
+
+      return courseMatch && yearMatch && semesterMatch;
+    });
+
+    if (filteredStudents.length === 0) {
+      alert('No se encontraron estudiantes con los filtros seleccionados');
+      return;
+    }
+
+    let processedCount = 0;
+    let skippedCount = 0;
+
+    for (const student of filteredStudents) {
+      try {
+        const record = grades.find(g =>
+          g.student_id === student.id &&
+          String(g.semester) === String(reportFilters.semester) &&
+          String(g.year) === String(reportFilters.year)
+        );
+
+        if (!record || !record.grades || typeof record.grades !== 'object') {
+          skippedCount++;
+          continue;
+        }
+
+        const materiasData = [];
+        const promediosFinales = [];
+
+        subjects.forEach(subject => {
+          const notasMateria = record.grades[subject] || [];
+          const notasArray = Array.isArray(notasMateria) ? notasMateria : [];
+
+          const notasCompletas = Array(7).fill('').map((_, index) => {
+            const nota = notasArray[index];
+            return (nota === null || nota === undefined) ? '' : String(nota);
+          });
+
+          const promedioMateria = calcularPromedio(notasCompletas);
+          promediosFinales.push(promedioMateria);
+
+          materiasData.push([
+            subject,
+            ...notasCompletas,
+            promedioMateria.toString()
+          ]);
+        });
+
+        const sumaPromedios = promediosFinales.reduce((acc, val) => acc + val, 0);
+        const promedio_final = Math.round(sumaPromedios / subjects.length);
+
+        // Validar y convertir semestre
+        let semestreTexto = 'PRIMER';
+        if (
+          student.semester === 2 || student.semester === '2' ||
+          reportFilters.semester === 2 || reportFilters.semester === '2'
+        ) {
+          semestreTexto = 'SEGUNDO';
+        }
+
+        const materiasDataClean = materiasData.map(materia =>
+          materia.map(item => item === undefined ? '' : String(item))
+        );
+
+        const pdfData = {
+          nombre_alumno: student.name || 'Sin nombre',
+          curso: student.course || 'Sin curso',
+          año: student.year || 'Sin año',
+          informe_periodo: semestreTexto || 'PRIMER',
+          materias_data: materiasDataClean,
+          observaciones: record.observations || '',
+          promedio_final: promedio_final.toString()
+        };
+
+        const pdfBytes = await generateStudentReport(pdfData);
+
+        const nombreLimpio = student.name
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '_')
+          .substring(0, 50);
+
+        zip.file(`${nombreLimpio}.pdf`, pdfBytes);
+        processedCount++;
+
+      } catch (error) {
+        console.error(`Error procesando ${student.name}:`, error);
+        skippedCount++;
+      }
+    }
+
+    if (processedCount === 0) {
+      alert('No se pudo procesar ningún estudiante. Revisa los datos y vuelve a intentar.');
+      return;
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const fechaActual = new Date().toISOString().split('T')[0];
+    const nombreZip = `informes_${reportFilters.course}_${reportFilters.semester}sem_${reportFilters.year}_${fechaActual}.zip`;
+
+    saveAs(zipBlob, nombreZip);
+
+    alert(
+      `Descarga completada!\n\n` +
+      `✓ Procesados: ${processedCount} estudiantes\n` +
+      `⚠ Omitidos: ${skippedCount} estudiantes\n` +
+      `📁 Archivo: ${nombreZip}`
+    );
+
+  } catch (error) {
+    console.error('Error en generateReports:', error);
+    alert('Error al generar los informes. Revisa la consola para más detalles.');
+  }
 };
 
 
