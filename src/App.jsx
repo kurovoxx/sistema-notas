@@ -15,15 +15,16 @@ const GradeManagementSystem = () => {
   // Estados principales
   const [activeTab, setActiveTab] = useState('notas');
   const [students, setStudents] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState([]); // Will store { id, name, subjects (course_json) }
   const [grades, setGrades] = useState([]);
 
   // Estados para formularios
   const [newStudent, setNewStudent] = useState({ name: '', course: '', year: '', semester: '' });
-  const [newCourse, setNewCourse] = useState('');
+  // newCourse state is now managed within CursosTab.jsx
   
   // Estados para ingreso de notas
-  const [selectedCourse, setSelectedCourse] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState(''); // Stores course NAME for filtering students
+  const [selectedCourseId, setSelectedCourseId] = useState(null); // Stores course ID for fetching subjects
   const [selectedStudent, setSelectedStudent] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
@@ -31,24 +32,16 @@ const GradeManagementSystem = () => {
   
   // Estados para filtros de reportes
   const [reportFilters, setReportFilters] = useState({
-    course: '',
+    course: '', // This will store course NAME
     semester: '',
     year: ''
   });
 
-  // Materias fijas
-  const subjects = [
-    'Lenguaje', 'Inglés', 'Matemáticas', 'Historia', 'Ciencias', 
-    'Artes', 'E. Tecnológica', 'E. Física', 'Religión'
-  ];
+  // Dynamically determined subjects based on selectedCourseId
+  const [currentCourseSubjects, setCurrentCourseSubjects] = useState([]);
 
-  // Estado para las notas (9 materias x 7 evaluaciones)
-  const [currentGrades, setCurrentGrades] = useState(
-    subjects.reduce((acc, subject) => {
-      acc[subject] = ['', '', '', '', '', '', ''];
-      return acc;
-    }, {})
-  );
+  // Estado para las notas (evaluaciones)
+  const [currentGrades, setCurrentGrades] = useState({});
 
   // Referencias para auto-advance
   const gradeRefs = useRef({});
@@ -56,16 +49,50 @@ const GradeManagementSystem = () => {
   // Cargar datos iniciales
   useEffect(() => {
     const fetchData = async () => {
-      const { data: studentsData } = await supabase.from('students').select('*');
-      const { data: coursesData } = await supabase.from('courses').select('*');
-      const { data: gradesData } = await supabase.from('grades').select('*');
+      const { data: studentsData, error: studentsError } = await supabase.from('students').select('*');
+      // Fetch courses with their names and course_json (subjects)
+      const { data: coursesData, error: coursesError } = await supabase.from('courses').select('id, name, course_json');
+      const { data: gradesData, error: gradesError } = await supabase.from('grades').select('*');
 
-      if (studentsData) setStudents(studentsData);
-      if (coursesData) setCourses(coursesData.map(c => c.name));
-      if (gradesData) setGrades(gradesData);
+      if (studentsError) console.error('Error fetching students:', studentsError);
+      else if (studentsData) setStudents(studentsData);
+
+      if (coursesError) console.error('Error fetching courses:', coursesError);
+      else if (coursesData) setCourses(coursesData.map(c => ({ ...c, subjects: c.course_json || [] }))); // Store full course objects
+
+      if (gradesError) console.error('Error fetching grades:', gradesError);
+      else if (gradesData) setGrades(gradesData);
     };
     fetchData();
   }, []);
+
+  // Efecto para actualizar currentCourseSubjects y currentGrades cuando cambia el curso seleccionado
+  useEffect(() => {
+    if (selectedCourseId) {
+      const courseDetails = courses.find(c => c.id === selectedCourseId);
+      if (courseDetails && courseDetails.subjects) {
+        setCurrentCourseSubjects(courseDetails.subjects);
+        // Initialize currentGrades for the new set of subjects
+        const initialGrades = courseDetails.subjects.reduce((acc, subject) => {
+          acc[subject] = Array(7).fill(''); // Assuming 7 evaluations per subject
+          return acc;
+        }, {});
+        setCurrentGrades(initialGrades);
+      } else {
+        setCurrentCourseSubjects([]);
+        setCurrentGrades({});
+      }
+    } else {
+      setCurrentCourseSubjects([]);
+      setCurrentGrades({});
+    }
+    // Reset student, semester, year, observations when course changes to avoid inconsistent state
+    setSelectedStudent('');
+    setSelectedSemester('');
+    setSelectedYear('');
+    setObservations('');
+  }, [selectedCourseId, courses]);
+
 
   // Agregar estudiante
   const addStudent = async () => {
@@ -74,9 +101,9 @@ const GradeManagementSystem = () => {
       return;
     }
     const { data, error } = await supabase.from('students').insert([newStudent]).select();
-    if (error || !data || !Array.isArray(data)) {
+    if (error || !data || !Array.isArray(data) || data.length === 0) {
       alert('Error al agregar estudiante');
-      console.error(error || 'Datos inválidos');
+      console.error(error || 'Datos inválidos o estudiante no devuelto');
       return;
     }
     setStudents(prev => [...prev, ...data]);
@@ -85,27 +112,32 @@ const GradeManagementSystem = () => {
   };
 
   // Agregar curso
-  const addCourse = async () => {
-    if (!newCourse.trim()) {
-      alert('Por favor ingresa el nombre del curso');
-      return;
-    }
-    if (courses.includes(newCourse)) {
+  const addCourse = async (courseData) => { // courseData is { name: string, subjects: string[] }
+    if (courses.some(c => c.name === courseData.name)) {
       alert('Este curso ya existe');
       return;
     }
-    const { data, error } = await supabase.from('courses').insert([{ name: newCourse }]);
+    const { data, error } = await supabase
+      .from('courses')
+      .insert([{ name: courseData.name, course_json: courseData.subjects }])
+      .select('id, name, course_json') // Select the new course data including id and course_json
+      .single(); // Expecting a single object back
+
     if (error) {
       alert('Error al agregar curso');
       console.error(error);
       return;
     }
-    setCourses(prev => [...prev, newCourse]);
-    setNewCourse('');
-    alert('Curso agregado exitosamente');
+    if (data) {
+      setCourses(prev => [...prev, { ...data, subjects: data.course_json || [] }]);
+      alert('Curso agregado exitosamente');
+    } else {
+      alert('Error: No se pudo obtener el curso agregado.');
+    }
   };
 
-  // Filtrar estudiantes por curso
+
+  // Filtrar estudiantes por curso (usa selectedCourse que es el nombre)
   const getStudentsByCourse = () => {
     return students.filter(student => student.course === selectedCourse);
   };
@@ -115,7 +147,7 @@ const GradeManagementSystem = () => {
     if (value === '') {
       setCurrentGrades(prev => ({
         ...prev,
-        [subject]: prev[subject].map((grade, i) => i === index ? '' : grade)
+        [subject]: (prev[subject] || Array(7).fill('')).map((grade, i) => i === index ? '' : grade)
       }));
       return;
     }
@@ -126,78 +158,93 @@ const GradeManagementSystem = () => {
     }
     setCurrentGrades(prev => ({
       ...prev,
-      [subject]: prev[subject].map((grade, i) => i === index ? value.toUpperCase() : grade)
+      [subject]: (prev[subject] || Array(7).fill('')).map((grade, i) => i === index ? value.toUpperCase() : grade)
     }));
-    if (value.length === 2 && index < 6) {
+    if (value.length === 2 && index < 6) { // Assuming 7 evaluations, so max index is 6
       const nextRef = gradeRefs.current[`${subject}-${index + 1}`];
       if (nextRef) nextRef.focus();
     }
   };
 
-  // Cargar notas existentes cuando se selecciona un estudiante
+  // Cargar notas existentes cuando se selecciona un estudiante, semestre y año
   useEffect(() => {
-    if (selectedStudent && selectedSemester && selectedYear) {
+    if (selectedStudent && selectedSemester && selectedYear && selectedCourseId) {
       const existingGrade = grades.find(g =>
         g.student_id === parseInt(selectedStudent) &&
         g.semester === parseInt(selectedSemester) &&
-        g.year === parseInt(selectedYear)
+        g.year === parseInt(selectedYear) &&
+        g.course_id === selectedCourseId // Ensure grades are for the correct course context
       );
-      if (existingGrade) {
-        setCurrentGrades(existingGrade.grades);
+
+      const courseDetails = courses.find(c => c.id === selectedCourseId);
+      const subjectsForCourse = courseDetails ? courseDetails.subjects : [];
+
+      if (existingGrade && existingGrade.grades) {
+        // Ensure existing grades align with current course subjects
+        const alignedGrades = subjectsForCourse.reduce((acc, subj) => {
+          acc[subj] = existingGrade.grades[subj] || Array(7).fill('');
+          return acc;
+        }, {});
+        setCurrentGrades(alignedGrades);
         setObservations(existingGrade.observations || '');
       } else {
-        setCurrentGrades(subjects.reduce((acc, subject) => {
-          acc[subject] = ['', '', '', '', '', '', ''];
+        // Initialize with empty grades for all subjects of the current course
+        const initialGrades = subjectsForCourse.reduce((acc, subject) => {
+          acc[subject] = Array(7).fill('');
           return acc;
-        }, {}));
+        }, {});
+        setCurrentGrades(initialGrades);
         setObservations('');
       }
     }
-  }, [selectedStudent, selectedSemester, selectedYear, grades, subjects]);
+  }, [selectedStudent, selectedSemester, selectedYear, selectedCourseId, grades, courses]);
+
 
   // Guardar notas
   const saveGrades = async () => {
-    if (!selectedStudent || !selectedSemester || !selectedYear) {
-      alert('Por favor selecciona estudiante, semestre y año');
+    if (!selectedStudent || !selectedSemester || !selectedYear || !selectedCourseId) {
+      alert('Por favor selecciona curso, estudiante, semestre y año');
       return;
     }
     const gradeRecord = {
       student_id: parseInt(selectedStudent),
+      course_id: selectedCourseId, // Add course_id to the record
       semester: parseInt(selectedSemester),
       year: parseInt(selectedYear),
-      grades: currentGrades,
+      grades: currentGrades, // This should now be structured by the dynamic subjects
       observations
     };
     const { data: existing } = await supabase
       .from('grades')
       .select('id')
       .eq('student_id', gradeRecord.student_id)
+      .eq('course_id', gradeRecord.course_id)
       .eq('semester', gradeRecord.semester)
       .eq('year', gradeRecord.year)
       .single();
 
+    let error;
     if (existing) {
       const { error: updateError } = await supabase
         .from('grades')
         .update(gradeRecord)
         .eq('id', existing.id);
-      if (updateError) {
-        alert('Error al actualizar notas');
-        console.error(updateError);
-        return;
-      }
-      alert('Notas actualizadas exitosamente');
+      error = updateError;
     } else {
       const { error: insertError } = await supabase.from('grades').insert([gradeRecord]);
-      if (insertError) {
-        alert('Error al guardar notas');
-        console.error(insertError);
-        return;
-      }
-      alert('Notas guardadas exitosamente');
+      error = insertError;
     }
-    const { data: updatedGrades } = await supabase.from('grades').select('*');
-    setGrades(updatedGrades);
+
+    if (error) {
+      alert(`Error al ${existing ? 'actualizar' : 'guardar'} notas`);
+      console.error(error);
+      return;
+    }
+    alert(`Notas ${existing ? 'actualizadas' : 'guardadas'} exitosamente`);
+
+    const { data: updatedGradesData, error: fetchError } = await supabase.from('grades').select('*');
+    if (fetchError) console.error("Error fetching updated grades:", fetchError);
+    else if (updatedGradesData) setGrades(updatedGradesData);
   };
 
   const calcularPromedio = (notas) => {
@@ -213,13 +260,21 @@ const GradeManagementSystem = () => {
   // Función generateReports
   const generateReports = async () => {
     if (!reportFilters?.course || !reportFilters?.semester || !reportFilters?.year) {
-      alert('Por favor selecciona curso, semestre y año');
+      alert('Por favor selecciona curso, semestre y año para generar informes.');
       return;
     }
+
+    const targetCourse = courses.find(c => c.name === reportFilters.course);
+    if (!targetCourse || !targetCourse.subjects || targetCourse.subjects.length === 0) {
+      alert('El curso seleccionado no tiene materias definidas o no se encontró.');
+      return;
+    }
+    const courseSubjectsForReport = targetCourse.subjects;
+
     try {
       const zip = new JSZip();
       const filteredStudents = students.filter(s =>
-        s.course === reportFilters.course &&
+        s.course === reportFilters.course && // reportFilters.course is name
         String(s.year) === String(reportFilters.year) &&
         String(s.semester) === String(reportFilters.semester)
       );
@@ -235,18 +290,20 @@ const GradeManagementSystem = () => {
       for (const student of filteredStudents) {
         const record = grades.find(g =>
           g.student_id === student.id &&
+          g.course_id === targetCourse.id && // Match by course_id
           String(g.semester) === String(reportFilters.semester) &&
           String(g.year) === String(reportFilters.year)
         );
 
         if (!record || !record.grades || typeof record.grades !== 'object') {
+          console.warn(`No grade record or invalid grades for student ${student.name} (ID: ${student.id}) in course ${targetCourse.name}`);
           skippedCount++;
           continue;
         }
 
         const materiasData = [];
         const promediosFinales = [];
-        subjects.forEach(subject => {
+        courseSubjectsForReport.forEach(subject => {
           const notasMateria = record.grades[subject] || [];
           const notasCompletas = Array(7).fill('').map((_, index) => String(notasMateria[index] ?? ''));
           const promedioMateria = calcularPromedio(notasCompletas);
@@ -254,17 +311,23 @@ const GradeManagementSystem = () => {
           materiasData.push([subject, ...notasCompletas, promedioMateria.toString()]);
         });
 
-        const promedio_final = Math.round(promediosFinales.reduce((a, b) => a + b, 0) / (subjects.length -1));
+        if (courseSubjectsForReport.length === 0) {
+            console.warn(`Skipping student ${student.name} due to no subjects in the course for report.`);
+            skippedCount++;
+            continue;
+        }
+        const promedio_final = Math.round(promediosFinales.reduce((a, b) => a + b, 0) / courseSubjectsForReport.length);
         let semestreTexto = (String(student.semester) === '2' || String(reportFilters.semester) === '2') ? 'SEGUNDO' : 'PRIMER';
 
         const pdfData = {
           nombre_alumno: student.name || 'Sin nombre',
-          curso: student.course || 'Sin curso',
+          curso: student.course || 'Sin curso', // Student's registered course name
           año: student.year || 'Sin año',
           informe_periodo: semestreTexto,
           materias_data: materiasData.map(m => m.map(item => String(item ?? ''))),
           observaciones: record.observations || '',
-          promedio_final: promedio_final.toString()
+          promedio_final: promedio_final.toString(),
+          subjects_for_pdf: courseSubjectsForReport // Pass subjects to PDF generator
         };
 
         const pdfBytes = await generateStudentReport(pdfData);
@@ -288,6 +351,13 @@ const GradeManagementSystem = () => {
       alert('Error al generar los informes. Revisa la consola para más detalles.');
     }
   };
+
+  const handleCourseSelectionForNotas = (courseName) => {
+    setSelectedCourse(courseName); // For student filtering
+    const courseDetail = courses.find(c => c.name === courseName);
+    setSelectedCourseId(courseDetail ? courseDetail.id : null); // For fetching subjects
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -326,9 +396,9 @@ const GradeManagementSystem = () => {
           {activeTab === 'notas' && (
             <NotasTab
               students={students}
-              courses={courses}
-              selectedCourse={selectedCourse}
-              setSelectedCourse={setSelectedCourse}
+              courses={courses.map(c => c.name)} // Pass only course names for the dropdown
+              selectedCourse={selectedCourse} // This is the name
+              setSelectedCourse={handleCourseSelectionForNotas} // Use the new handler
               selectedStudent={selectedStudent}
               setSelectedStudent={setSelectedStudent}
               selectedSemester={selectedSemester}
@@ -336,7 +406,7 @@ const GradeManagementSystem = () => {
               selectedYear={selectedYear}
               setSelectedYear={setSelectedYear}
               getStudentsByCourse={getStudentsByCourse}
-              subjects={subjects}
+              subjects={currentCourseSubjects} // Pass dynamic subjects
               currentGrades={currentGrades}
               handleGradeChange={handleGradeChange}
               gradeRefs={gradeRefs}
@@ -349,24 +419,22 @@ const GradeManagementSystem = () => {
             <EstudiantesTab
               newStudent={newStudent}
               setNewStudent={setNewStudent}
-              courses={courses}
+              courses={courses.map(c => c.name)} // Pass only course names
               addStudent={addStudent}
               students={students}
             />
           )}
           {activeTab === 'cursos' && (
             <CursosTab
-              newCourse={newCourse}
-              setNewCourse={setNewCourse}
               addCourse={addCourse}
-              courses={courses}
+              courses={courses} // Pass full course objects {id, name, subjects}
             />
           )}
           {activeTab === 'reportes' && (
             <ReportesTab
               reportFilters={reportFilters}
               setReportFilters={setReportFilters}
-              courses={courses}
+              courses={courses.map(c => c.name)} // Pass only course names
               generateReports={generateReports}
             />
           )}
