@@ -10,8 +10,10 @@ import NotasTab from './components/NotasTab';
 import EstudiantesTab from './components/EstudiantesTab';
 import CursosTab from './components/CursosTab';
 import ReportesTab from './components/ReportesTab';
+import Login from './components/Login'; // Import the Login component
 
 const GradeManagementSystem = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Authentication state
   // Estados principales
   const [activeTab, setActiveTab] = useState('notas');
   const [students, setStudents] = useState([]);
@@ -358,6 +360,13 @@ const GradeManagementSystem = () => {
     setSelectedCourseId(courseDetail ? courseDetail.id : null); // For fetching subjects
   };
 
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
