@@ -11,6 +11,7 @@ import EstudiantesTab from './components/EstudiantesTab';
 import CursosTab from './components/CursosTab';
 import ReportesTab from './components/ReportesTab';
 import Login from './components/Login'; // Import the Login component
+import logo from './logos.jpg'; // Import the logo
 
 const GradeManagementSystem = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Authentication state
@@ -369,45 +370,40 @@ const GradeManagementSystem = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Sistema de Gestión de Notas</h1>
-        </div>
+    <div className="app-container">
+      <header className="app-header">
+        <h1 className="header-title">Sistema de Gestión de Notas</h1>
+        <img src={logo} alt="logo" className="header-logo" />
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            {[
-              { id: 'notas', label: 'Ingresar Notas', icon: GraduationCap },
-              { id: 'estudiantes', label: 'Agregar Estudiante', icon: Users },
-              { id: 'cursos', label: 'Agregar Curso', icon: BookOpen },
-              { id: 'reportes', label: 'Descargar Informes', icon: FileDown }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
+      <nav className="tabs-navigation">
+        <ul className="tabs-list">
+          {[
+            { id: 'notas', label: 'Ingresar Notas', icon: GraduationCap },
+            { id: 'estudiantes', label: 'Agregar Estudiante', icon: Users },
+            { id: 'cursos', label: 'Agregar Curso', icon: BookOpen },
+            { id: 'reportes', label: 'Descargar Informes', icon: FileDown }
+          ].map(tab => (
+            <li
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-        <div className="mt-6">
+      <main className="main-content">
+        <div className="card">
           {activeTab === 'notas' && (
             <NotasTab
               students={students}
-              courses={courses.map(c => c.name)} // Pass only course names for the dropdown
-              selectedCourse={selectedCourse} // This is the name
-              setSelectedCourse={handleCourseSelectionForNotas} // Use the new handler
+              courses={courses.map(c => c.name)}
+              selectedCourse={selectedCourse}
+              setSelectedCourse={handleCourseSelectionForNotas}
               selectedStudent={selectedStudent}
               setSelectedStudent={setSelectedStudent}
               selectedSemester={selectedSemester}
@@ -415,7 +411,7 @@ const GradeManagementSystem = () => {
               selectedYear={selectedYear}
               setSelectedYear={setSelectedYear}
               getStudentsByCourse={getStudentsByCourse}
-              subjects={currentCourseSubjects} // Pass dynamic subjects
+              subjects={currentCourseSubjects}
               currentGrades={currentGrades}
               handleGradeChange={handleGradeChange}
               gradeRefs={gradeRefs}
@@ -428,7 +424,7 @@ const GradeManagementSystem = () => {
             <EstudiantesTab
               newStudent={newStudent}
               setNewStudent={setNewStudent}
-              courses={courses.map(c => c.name)} // Pass only course names
+              courses={courses.map(c => c.name)}
               addStudent={addStudent}
               students={students}
             />
@@ -436,19 +432,26 @@ const GradeManagementSystem = () => {
           {activeTab === 'cursos' && (
             <CursosTab
               addCourse={addCourse}
-              courses={courses} // Pass full course objects {id, name, subjects}
+              courses={courses}
             />
           )}
           {activeTab === 'reportes' && (
             <ReportesTab
               reportFilters={reportFilters}
               setReportFilters={setReportFilters}
-              courses={courses.map(c => c.name)} // Pass only course names
+              courses={courses.map(c => c.name)}
               generateReports={generateReports}
             />
           )}
         </div>
-      </div>
+      </main>
+
+      <footer className="app-footer">
+        <div className="footer-content">
+          <p>&copy; 2024 Your Company Name. All rights reserved.</p>
+          <p>Contact: <a href="mailto:info@example.com">info@example.com</a></p>
+        </div>
+      </footer>
     </div>
   );
 };

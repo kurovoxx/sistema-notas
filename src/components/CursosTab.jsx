@@ -21,43 +21,35 @@ const CursosTab = ({ addCourse, courses }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow max-w-md">
-      <h3 className="text-lg font-semibold mb-4">Agregar Nuevo Curso</h3>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Nombre del Curso
-          </label>
+    <div>
+      <h3 className="card-title">Agregar Nuevo Curso</h3>
+      <div className="form-grid">
+        <div className="form-group">
+          <label className="form-label">Nombre del Curso</label>
           <input
             type="text"
             value={courseName}
             onChange={(e) => setCourseName(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="form-input"
             placeholder="Ej: 2°mA"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Materias (separadas por coma)
-          </label>
+        <div className="form-group">
+          <label className="form-label">Materias (separadas por coma)</label>
           <input
             type="text"
             value={courseSubjects}
             onChange={(e) => setCourseSubjects(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="form-input"
             placeholder="Ej: Lenguaje, Matemáticas, Historia"
           />
         </div>
-        <button
-          onClick={handleAddCourse}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 flex items-center justify-center space-x-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Agregar Curso</span>
-        </button>
       </div>
+      <button onClick={handleAddCourse} className="btn btn-primary mt-4">
+        <Plus className="w-4 h-4" />
+        <span>Agregar Curso</span>
+      </button>
 
-      {/* Lista de cursos */}
       {courses.length > 0 && (
         <div className="mt-6">
           <h4 className="font-medium text-gray-700 mb-2">Cursos Registrados:</h4>
