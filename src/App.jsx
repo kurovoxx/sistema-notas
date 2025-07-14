@@ -398,6 +398,7 @@ const generateReports = async () => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-gray-900">Sistema de Gestión de Notas</h1>
+          <img src="./src/logos.jpg" alt="nose" />
         </div>
       </header>
 
