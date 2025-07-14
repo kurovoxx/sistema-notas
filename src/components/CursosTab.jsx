@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 
 const CursosTab = ({ addCourse, courses }) => {
   const [courseName, setCourseName] = useState('');
-  const [courseSubjects, setCourseSubjects] = useState('');
+  const [courseSubjects, setCourseSubjects] = useState('Lenguaje, Inglés, Matemáticas, Historia, Ciencias, Artes, E. Tecnológica, E. Física, Religión');
 
   const handleAddCourse = () => {
     if (!courseName.trim()) {

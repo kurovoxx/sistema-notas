@@ -370,10 +370,12 @@ const GradeManagementSystem = () => {
   }
 
   return (
+
     <div className="app-container">
       <header className="app-header">
         <h1 className="header-title">Sistema de Gestión de Notas</h1>
         <img src={logo} alt="logo" className="header-logo" />
+
       </header>
 
       <nav className="tabs-navigation">
