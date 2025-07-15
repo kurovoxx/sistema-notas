@@ -5,6 +5,7 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { generateStudentReport } from './pdfGenerator';
 import './modern-style.css';
+import logo from './logos-removebg-preview.png';
 
 import NotasTab from './components/NotasTab';
 import EstudiantesTab from './components/EstudiantesTab';
@@ -373,33 +374,26 @@ const GradeManagementSystem = () => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-gray-900">Sistema de Gestión de Notas</h1>
-          
+          <img src={logo} alt="Logo" className="logo" />
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            {[
-              { id: 'notas', label: 'Ingresar Notas', icon: GraduationCap },
-              { id: 'estudiantes', label: 'Agregar Estudiante', icon: Users },
-              { id: 'cursos', label: 'Agregar Curso', icon: BookOpen },
-              { id: 'reportes', label: 'Descargar Informes', icon: FileDown }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </nav>
+        <div className="tabs-container">
+          {[
+            { id: 'notas', label: 'Ingresar Notas' },
+            { id: 'estudiantes', label: 'Agregar Estudiante' },
+            { id: 'cursos', label: 'Agregar Curso' },
+            { id: 'reportes', label: 'Descargar Informes' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`tab ${activeTab === tab.id ? 'active' : ''}`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         <div className="mt-6">
@@ -450,6 +444,9 @@ const GradeManagementSystem = () => {
           )}
         </div>
       </div>
+      <footer className="footer">
+        <p>Example footer text.</p>
+      </footer>
     </div>
   );
 };
