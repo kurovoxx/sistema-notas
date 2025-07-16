@@ -50,11 +50,11 @@ const CursosTab = ({ addCourse, courses }) => {
         </div>
         <button
           onClick={handleAddCourse}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 flex items-center justify-center space-x-2"
+          className="w-full btn text-white py-2 px-4 rounded-md hover:bg-blue-700 flex items-center justify-center space-x-2"
         >
-          <Plus className="w-4 h-4" />
           <span>Agregar Curso</span>
         </button>
+        
       </div>
 
       {/* Lista de cursos */}

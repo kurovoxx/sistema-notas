@@ -56,9 +56,8 @@ const ReportesTab = ({
 
         <button
           onClick={generateReports}
-          className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 flex items-center justify-center space-x-2"
+          className="w-full btn text-white py-2 px-4 rounded-md hover:bg-purple-700 flex items-center justify-center space-x-2"
         >
-          <FileDown className="w-4 h-4" />
           <span>Descargar Informes</span>
         </button>
       </div>

@@ -95,31 +95,16 @@ button {
   cursor: pointer;
 }
 
-.bg-blue-600 {
-  background-color: var(--verde-lse);
+/* Botones */
+
+.btn {
+  background: linear-gradient(to right, #b76405, rgb(216, 239, 14));
   color: white;
 }
 
-.bg-blue-600:hover {
-  background-color: #36b45e;
-}
+.btn:hover {
+    background: linear-gradient(to right, #5ef83f, rgb(216, 239, 14));
 
-.bg-green-600 {
-  background-color: var(--amarillo-lse);
-  color: black;
-}
-
-.bg-green-600:hover {
-  background-color: #e0c907;
-}
-
-.bg-purple-600 {
-  background-color: var(--naranja-lse);
-  color: white;
-}
-
-.bg-purple-600:hover {
-  background-color: #984717;
 }
 
 /* Cajas de advertencia/info */
@@ -161,7 +146,7 @@ select, input, textarea, button {
   border-bottom: 1px solid #ddd;
   margin-bottom: 1.5rem;
   background-color: #e8f79b;
-  background: linear-gradient(to top, #e8f79b, #d3e095);
+  background: linear-gradient(to top, #e8f79b, #c2ce89);
 }
 
 .tab-button {
