@@ -1,6 +1,7 @@
 import React from 'react';
 import { Save } from 'lucide-react';
 
+
 const NotasTab = ({
   students, // Full student objects
   courses, // Array of course names for dropdown
@@ -106,7 +107,7 @@ const NotasTab = ({
                   <strong> Semestre:</strong> {selectedSemester}° |
                   <strong> Año:</strong> {selectedYear}
                 </p>
-                <p className="text-xs text-blue-600 mt-1">Notas válidas: 10-70 (máximo 2 dígitos)</p>
+                
               </div>
 
               <div className="space-y-3 overflow-x-auto">
@@ -163,11 +164,12 @@ const NotasTab = ({
           <div className="mt-6">
             <button
               onClick={saveGrades}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 flex items-center space-x-2"
+              className="btn text-white px-6 py-2 rounded-md hover:bg-blue-700 flex items-center space-x-2"
             >
-              <Save className="w-4 h-4" />
               <span>Guardar Notas</span>
             </button>
+            
+
           </div>
         </div>
       )}

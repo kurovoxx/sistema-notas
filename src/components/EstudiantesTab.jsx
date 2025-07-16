@@ -74,9 +74,8 @@ const EstudiantesTab = ({
 
         <button
           onClick={addStudent}
-          className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 flex items-center justify-center space-x-2"
+          className="w-full btn text-white py-2 px-4 rounded-md hover:bg-green-700 flex items-center justify-center space-x-2"
         >
-          <Plus className="w-4 h-4" />
           <span>Agregar Estudiante</span>
         </button>
       </div>
