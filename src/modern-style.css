@@ -23,9 +23,9 @@ h1, h2, h3 {
 
 .header {
   background: linear-gradient(to right, #f7df07, rgb(117, 201, 78));
-  box-shadow: 0 1px 80px rgba(133, 88, 10, 0.712);
-  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 30px rgba(17, 13, 7, 0.712);
   padding: 1rem;
+  border-bottom: 1px solid #906907;
 }
 
 
@@ -42,6 +42,11 @@ h1, h2, h3 {
   font-weight: 700;
   color: #603010; /* gris oscuro */
   margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-image: linear-gradient(to top, #603010, rgb(202, 153, 19));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 1px 5px 1px rgba(98, 97, 97, 0.25);
 }
 
 .logo {
@@ -156,7 +161,7 @@ select, input, textarea, button {
   border-bottom: 1px solid #ddd;
   margin-bottom: 1.5rem;
   background-color: #e8f79b;
-
+  background: linear-gradient(to top, #e8f79b, #d3e095);
 }
 
 .tab-button {

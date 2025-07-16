@@ -25,8 +25,8 @@ const CursosTab = ({ addCourse, courses }) => {
       <h3 className="text-lg font-semibold mb-4">Agregar Nuevo Curso</h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Nombre del Curso
+          <label className="texto_label">
+            Nombre Curso
           </label>
           <input
             type="text"
@@ -37,8 +37,8 @@ const CursosTab = ({ addCourse, courses }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Materias (separadas por coma)
+          <label className="texto_label">
+            Materias
           </label>
           <input
             type="text"

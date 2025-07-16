@@ -29,7 +29,7 @@ const NotasTab = ({
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Curso</label>
+            <label className="texto_label">Curso</label>
             <select
               value={selectedCourse} // This is the course name
               onChange={(e) => setSelectedCourse(e.target.value)} // This passes the name to App.jsx
@@ -43,7 +43,7 @@ const NotasTab = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Estudiante</label>
+            <label className="texto_label">Estudiante</label>
             <select
               value={selectedStudent}
               onChange={(e) => setSelectedStudent(e.target.value)}
@@ -58,7 +58,7 @@ const NotasTab = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Semestre</label>
+            <label className="texto_label">Semestre</label>
             <select
               value={selectedSemester}
               onChange={(e) => setSelectedSemester(e.target.value)}
@@ -71,7 +71,7 @@ const NotasTab = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Año</label>
+            <label className="texto_label">Año</label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}

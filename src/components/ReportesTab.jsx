@@ -1,6 +1,8 @@
 import React from 'react';
 import { FileDown } from 'lucide-react';
 
+import './componentes_style.css';
+
 const ReportesTab = ({
   reportFilters,
   setReportFilters,
@@ -12,7 +14,7 @@ const ReportesTab = ({
       <h3 className="text-lg font-semibold mb-4">Generar Informes por Curso</h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Curso</label>
+          <label className="texto_label">Curso</label>
           <select
             value={reportFilters.course}
             onChange={(e) => setReportFilters({...reportFilters, course: e.target.value})}
@@ -26,7 +28,7 @@ const ReportesTab = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Semestre</label>
+          <label className="texto_label">Semestre</label>
           <select
             value={reportFilters.semester}
             onChange={(e) => setReportFilters({...reportFilters, semester: e.target.value})}
@@ -39,7 +41,7 @@ const ReportesTab = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Año</label>
+          <label className="texto_label">Año</label>
           <select
             value={reportFilters.year}
             onChange={(e) => setReportFilters({...reportFilters, year: e.target.value})}
