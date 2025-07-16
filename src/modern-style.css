@@ -12,7 +12,7 @@
 /* Fuente y estructura */
 body {
   font-family: 'Segoe UI', sans-serif;
-  background-color: var(--gris-fondo);
+  background-color: #f9e7d8;
   color: var(--gris-texto);
   line-height: 1.6;
 }
@@ -21,33 +21,38 @@ h1, h2, h3 {
   color: var(--gris-texto);
 }
 
-/* Header */
-header {
-  background-color: white;
-  border-bottom: 1px solid var(--gris-borde);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+.header {
+  background: linear-gradient(to right, #f7df07, rgb(117, 201, 78));
+  box-shadow: 0 1px 80px rgba(133, 88, 10, 0.712);
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem;
 }
+
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #603010; /* gris oscuro */
+  margin: 0;
+}
+
+.logo {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+}
+
 
 header h1 {
   font-size: 1.75rem;
-}
-
-/* Tabs */
-nav button {
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s ease-in-out;
-}
-
-nav button:hover {
-  border-color: var(--verde-lse);
-  color: var(--verde-lse);
-}
-
-nav button.border-blue-500 {
-  color: var(--verde-lse);
-  border-color: var(--verde-lse);
 }
 
 /* Tarjetas y contenedores */
@@ -142,4 +147,97 @@ input[type="text"].w-12 {
 /* Transiciones suaves */
 select, input, textarea, button {
   transition: all 0.2s ease-in-out;
+}
+
+.tab-nav {
+  display: flex;
+  justify-content: start;
+  gap: 1rem;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 1.5rem;
+  background-color: #e8f79b;
+
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #606770;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tab-button:hover {
+  color: #532f06; /* Azul más fuerte al pasar el mouse */
+}
+
+.tab-button.active {
+  color: #532f06;
+}
+
+.tab-button.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+  width: 70%;
+  height: 3px;
+  background-color: #532f06;
+  border-radius: 9999px;
+  transition: width 0.2s ease;
+}
+
+.tab-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Footer */
+
+.footer {
+    background: linear-gradient(to right, #f7df07, rgb(117, 201, 78));
+  border-top: 1px solid #e5e7eb;
+  padding: 1.5rem 1rem;
+  margin-top: 2rem;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.footer-text {
+  font-size: 0.875rem;
+  color: #6b7280; /* gris medio */
+  margin: 0;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.footer-link {
+  font-size: 0.875rem;
+  color: #2563eb; /* azul */
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #1d4ed8;
 }
