@@ -13,7 +13,7 @@ const EstudiantesTab = ({
       <h3 className="text-lg font-semibold mb-4">Agregar Nuevo Estudiante</h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="texto_label">
             Nombre Completo
           </label>
           <input
@@ -26,7 +26,7 @@ const EstudiantesTab = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="texto_label">
             Curso
           </label>
           <select
@@ -42,7 +42,7 @@ const EstudiantesTab = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="texto_label">
             Semestre
           </label>
           <select
@@ -57,7 +57,7 @@ const EstudiantesTab = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="texto_label">
             Año Académico
           </label>
           <select

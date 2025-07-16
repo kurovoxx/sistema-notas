@@ -375,7 +375,7 @@ const GradeManagementSystem = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="header">
         <div className="header-content">
-          <h1 className="title">Notas Licéo Agrícola San Sebastián</h1>
+          <h1 className="title">Notas Liceo Agrícola San Sebastián</h1>
           <img src={logo} alt="Logo" className="logo" />
         </div>
       </header>
@@ -453,7 +453,7 @@ const GradeManagementSystem = () => {
       </div>
       <footer className="footer">
         <div className="footer-content">
-          <p className="footer-text">© 2025 Licéo Agrícola San Sebastián.</p>
+          <p className="footer-text">© 2025 Liceo Agrícola San Sebastián.</p>
           <div className="footer-links">
             <a href="#" className="footer-link">Comuna de Perquenco</a>
             <a href="#" className="footer-link">Director: Álvaro Guzmán Ibáñez</a>
